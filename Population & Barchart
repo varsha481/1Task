@@ -1,0 +1,55 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+
+# 🔹 Check if running in Google Colab (for file upload support)
+try:
+    from google.colab import files
+    colab_env = True
+except ImportError:
+    colab_env = False
+
+# 🔹 Define the file path
+file_path = '/mnt/data/API_SP.POP.TOTL_DS2_en_csv_v2_900.csv'
+
+# 🔹 Check if file exists; if not, prompt user to upload
+if not os.path.exists(file_path):
+    print("⚠️ File not found. Please upload the CSV file.")
+    if colab_env:
+        uploaded = files.upload()  # Opens file upload dialog in Google Colab
+        file_path = list(uploaded.keys())[0]  # Get uploaded file name
+    else:
+        raise FileNotFoundError("CSV file is missing. Please check the file path.")
+
+# 🔹 Load the dataset
+data = pd.read_csv(file_path, skiprows=4)
+
+# 🔹 Select the year for analysis (e.g., 2022)
+year = '2022'
+
+# 🔹 Check if the selected year column exists
+if year not in data.columns:
+    raise ValueError(f"⚠️ Year {year} not found in dataset. Check available columns: {data.columns}")
+
+# 🔹 Filter the data for the selected year and drop NaN values
+population_data = data[['Country Name', year]].dropna()
+
+# 🔹 Convert population data to numeric (in case of formatting issues)
+population_data[year] = pd.to_numeric(population_data[year], errors='coerce')
+
+# 🔹 Sort the data by population in descending order and select the top 10 countries
+population_top10 = population_data.sort_values(by=year, ascending=False).head(10)
+
+# 🔹 Plot the bar chart
+plt.figure(figsize=(12, 6))
+plt.bar(population_top10['Country Name'], population_top10[year], color='skyblue')
+
+# 🔹 Add titles and labels
+plt.title(f'Top 10 Countries by Population in {year}', fontsize=16)
+plt.xlabel('Country', fontsize=12)
+plt.ylabel('Population', fontsize=12)
+plt.xticks(rotation=45, ha='right')
+
+# 🔹 Display the chart
+plt.tight_layout()
+plt.show()
